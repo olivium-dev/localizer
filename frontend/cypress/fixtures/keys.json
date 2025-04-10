@@ -1,0 +1,44 @@
+[
+  {
+    "name": "welcome.message",
+    "description": "Welcome message displayed on the homepage",
+    "stringValues": [
+      {
+        "languageId": 1,
+        "value": "Welcome to our application"
+      },
+      {
+        "languageId": 2,
+        "value": "Bienvenue dans notre application"
+      }
+    ]
+  },
+  {
+    "name": "button.submit",
+    "description": "Text for submit buttons",
+    "stringValues": [
+      {
+        "languageId": 1,
+        "value": "Submit"
+      },
+      {
+        "languageId": 2,
+        "value": "Soumettre"
+      }
+    ]
+  },
+  {
+    "name": "error.required",
+    "description": "Error message for required fields",
+    "stringValues": [
+      {
+        "languageId": 1,
+        "value": "This field is required"
+      },
+      {
+        "languageId": 2,
+        "value": "Ce champ est obligatoire"
+      }
+    ]
+  }
+] 
