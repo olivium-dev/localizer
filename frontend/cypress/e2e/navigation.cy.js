@@ -37,6 +37,18 @@ describe('Navigation', () => {
     cy.contains('h5', 'Language Management').should('be.visible');
   });
 
+  it('should navigate to Export tab', () => {
+    // Click on Export tab
+    cy.findByRole('tab', { name: /export/i }).click({ force: true });
+
+    // Verify Export tab is active
+    cy.findByRole('tab', { name: /export/i })
+      .should('have.attr', 'aria-selected', 'true');
+
+    // Verify the export content is visible
+    cy.contains('h5', 'Export Options').should('be.visible');
+  });
+
   it('should navigate back to Keys tab', () => {
     // First navigate to Languages tab
     cy.findByRole('tab', { name: /languages/i }).click();

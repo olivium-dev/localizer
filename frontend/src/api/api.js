@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // API client setup
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -26,4 +26,9 @@ export const keyApi = {
   create: (key) => apiClient.post('/keys', key),
   update: (id, key) => apiClient.put(`/keys/${id}`, key),
   delete: (id) => apiClient.delete(`/keys/${id}`),
+};
+
+// Export API services
+export const exportApi = {
+  flutter: () => apiClient.get('/export/flutter', { responseType: 'blob' }),
 }; 

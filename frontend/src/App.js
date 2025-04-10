@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import KeyList from './components/KeyList';
 import LanguageManagement from './components/LanguageManagement';
+import ExportOptions from './components/ExportOptions';
 
 // Create Material UI theme
 const theme = createTheme({
@@ -48,6 +49,7 @@ function App() {
             >
               <Tab label="Localization Keys" />
               <Tab label="Languages" />
+              <Tab label="Export" />
             </Tabs>
           </Paper>
           
@@ -57,6 +59,10 @@ function App() {
           
           {activeTab === 1 && (
             <LanguageManagement />
+          )}
+          
+          {activeTab === 2 && (
+            <ExportOptions />
           )}
         </Container>
       </Box>
