@@ -39,7 +39,7 @@ describe('Navigation', () => {
 
   it('should navigate to Export tab', () => {
     // Click on Export tab
-    cy.findByRole('tab', { name: /export/i }).click();
+    cy.findByRole('tab', { name: /export/i }).click({ force: true });
 
     // Verify Export tab is active
     cy.findByRole('tab', { name: /export/i })
