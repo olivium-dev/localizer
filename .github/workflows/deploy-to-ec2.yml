@@ -1,0 +1,96 @@
+# This workflow deploys the Localizer application to an EC2 instance using Docker
+# It can be manually triggered from the Actions tab in GitHub
+# To run manually: Go to Actions > Deploy to EC2 > Run workflow
+name: Deploy Localizer to EC2
+
+on:
+  # Manual trigger with custom inputs
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Docker registry URL'
+        required: true
+        default: 'ghcr.io'
+      service_name:
+        description: 'Service name for deployment'
+        required: true
+        default: 'localizer-app'
+      backend_port:
+        description: 'Internal port for backend service'
+        required: true
+        default: '5002'
+      frontend_port:
+        description: 'Internal port for frontend service'
+        required: true
+        default: '3000'
+      backend_external_port:
+        description: 'External port for backend service'
+        required: true
+        default: '10500'
+      frontend_external_port:
+        description: 'External port for frontend service'
+        required: true
+        default: '10501'
+      server:
+        description: 'Server address for SSH (user@hostname)'
+        required: true
+        default: 'ec2-user@your-ec2-instance.compute.amazonaws.com'
+      ssh_option:
+        description: 'Choose SSH key option'
+        required: true
+        default: 'default'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    
+    env:
+      DB_HOST: 'localhost'
+      DB_PORT: '5432'
+      DB_NAME: 'localizer'
+      DB_USER: 'postgres'
+
+    steps:
+      - name: Setup SSH Key and Server Connection
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $(echo "${{ inputs.server }}" | awk -F'@' '{print $2}') >> ~/.ssh/known_hosts
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Environment
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_PATH="${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service_name }}:${{ github.run_id }}"
+          docker build -t $IMAGE_PATH .
+          docker push $IMAGE_PATH
+
+      - name: Deploy Docker Image
+        run: |
+          IMAGE_PATH="${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service_name }}:${{ github.run_id }}"
+          ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" ${{ inputs.server }} "\
+          docker pull '${IMAGE_PATH}' && \
+          docker stop ${{ inputs.service_name }} || echo 'Container not running. Continuing...' && \
+          docker rm ${{ inputs.service_name }} || echo 'Container not found. Continuing...' && \
+          docker run -d \
+            --name ${{ inputs.service_name }} \
+            -p ${{ inputs.backend_external_port }}:${{ inputs.backend_port }} \
+            -p ${{ inputs.frontend_external_port }}:${{ inputs.frontend_port }} \
+            --env BACKEND_PORT=${{ inputs.backend_port }} \
+            --env FRONTEND_PORT=${{ inputs.frontend_port }} \
+            --env DB_HOST=${{ env.DB_HOST }} \
+            --env DB_PORT=${{ env.DB_PORT }} \
+            --env DB_NAME=${{ env.DB_NAME }} \
+            --env DB_USER=${{ env.DB_USER }} \
+            --env DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            '${IMAGE_PATH}}'" 
