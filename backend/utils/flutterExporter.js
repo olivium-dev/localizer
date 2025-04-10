@@ -76,7 +76,7 @@ import 'package:intl/intl.dart';
 ${importStatements}
 
 /// Callers can lookup localized strings with an instance of AppLocalizations
-/// returned by `AppLocalizations.of(context)`.
+/// returned by \`AppLocalizations.of(context)\`.
 abstract class AppLocalizations {
   AppLocalizations(String locale) : localeName = locale.toString();
 
