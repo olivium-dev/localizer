@@ -5,8 +5,16 @@ const archiver = require('archiver');
 const { 
   generateLanguageFile, 
   generateAppLocalizationsClass, 
-  organizeDataForExport 
+  organizeDataForExport: organizeDataForFlutterExport 
 } = require('../utils/flutterExporter');
+const {
+  organizeDataForExport: organizeDataForJsonExport,
+  generateJson
+} = require('../utils/jsonExporter');
+const {
+  organizeDataForExport: organizeDataForCsvExport,
+  generateCsv
+} = require('../utils/csvExporter');
 
 // Utility function to ensure the directory exists
 const ensureDirectoryExistence = (filePath) => {
@@ -53,7 +61,7 @@ exports.exportToFlutter = async (req, res) => {
     
     // Process the data for export
     console.log('Processing data for export...');
-    const { languageMap, supportedLocales, keys: processedKeys } = organizeDataForExport(keys, languages);
+    const { languageMap, supportedLocales, keys: processedKeys } = organizeDataForFlutterExport(keys, languages);
     console.log(`Organized data: ${Object.keys(languageMap).length} language maps, ${supportedLocales.length} locales`);
     
     // Create output directory in the system temp directory
@@ -236,6 +244,116 @@ final appTitle = AppLocalizations.of(context)!.app_title;
     console.error('Stack trace:', error.stack);
     return res.status(500).json({ 
       message: 'Error exporting to Flutter', 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
+/**
+ * Export all localization data to JSON format
+ */
+exports.exportToJson = async (req, res) => {
+  try {
+    console.log('Starting JSON export...');
+    
+    // Fetch all keys with their string values
+    const keys = await Key.findAll({
+      include: [
+        {
+          model: StringValue,
+          include: [Language],
+        },
+      ],
+    });
+    console.log(`Fetched ${keys.length} keys from database`);
+    
+    // Fetch all languages
+    const languages = await Language.findAll();
+    console.log(`Fetched ${languages.length} languages from database`);
+    
+    if (!keys.length) {
+      return res.status(404).json({ message: 'No keys found to export' });
+    }
+    
+    if (!languages.length) {
+      return res.status(404).json({ message: 'No languages found to export' });
+    }
+    
+    // Process the data for export
+    console.log('Processing data for JSON export...');
+    const data = organizeDataForJsonExport(keys, languages);
+    
+    // Generate JSON
+    console.log('Generating JSON output...');
+    const jsonOutput = generateJson(data);
+    
+    // Send as response
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=localizations.json');
+    res.send(jsonOutput);
+    
+    console.log('JSON export completed successfully');
+  } catch (error) {
+    console.error('Error exporting to JSON:', error);
+    console.error('Stack trace:', error.stack);
+    return res.status(500).json({ 
+      message: 'Error exporting to JSON', 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
+/**
+ * Export all localization data to CSV format
+ */
+exports.exportToCsv = async (req, res) => {
+  try {
+    console.log('Starting CSV export...');
+    
+    // Fetch all keys with their string values
+    const keys = await Key.findAll({
+      include: [
+        {
+          model: StringValue,
+          include: [Language],
+        },
+      ],
+    });
+    console.log(`Fetched ${keys.length} keys from database`);
+    
+    // Fetch all languages
+    const languages = await Language.findAll();
+    console.log(`Fetched ${languages.length} languages from database`);
+    
+    if (!keys.length) {
+      return res.status(404).json({ message: 'No keys found to export' });
+    }
+    
+    if (!languages.length) {
+      return res.status(404).json({ message: 'No languages found to export' });
+    }
+    
+    // Process the data for export
+    console.log('Processing data for CSV export...');
+    const rows = organizeDataForCsvExport(keys, languages);
+    
+    // Generate CSV
+    console.log('Generating CSV output...');
+    const csvOutput = generateCsv(rows);
+    
+    // Send as response
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=localizations.csv');
+    res.send(csvOutput);
+    
+    console.log('CSV export completed successfully');
+  } catch (error) {
+    console.error('Error exporting to CSV:', error);
+    console.error('Stack trace:', error.stack);
+    return res.status(500).json({ 
+      message: 'Error exporting to CSV', 
       error: error.message,
       stack: error.stack
     });

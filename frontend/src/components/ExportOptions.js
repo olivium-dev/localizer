@@ -1,133 +1,239 @@
 import React, { useState } from 'react';
 import { 
-  Box, Button, Typography, Card, CardContent, 
-  CircularProgress, Snackbar, Alert,
-  List, ListItem, ListItemIcon, ListItemText, Divider
+  Box, 
+  Button, 
+  Typography, 
+  Paper, 
+  List, 
+  ListItem, 
+  ListItemIcon, 
+  ListItemText,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  Grid,
+  Divider
 } from '@mui/material';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import MobileScreenShareIcon from '@mui/icons-material/MobileScreenShare';
-import InfoIcon from '@mui/icons-material/Info';
+import CodeIcon from '@mui/icons-material/Code';
+import LanguageIcon from '@mui/icons-material/Language';
+import SettingsIcon from '@mui/icons-material/Settings';
+import DescriptionIcon from '@mui/icons-material/Description';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import DataObjectIcon from '@mui/icons-material/DataObject';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import { exportApi } from '../api/api';
 
 const ExportOptions = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    flutter: false,
+    json: false,
+    csv: false
+  });
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'info'
+    severity: 'success'
   });
-  
-  // Handle close of snackbar
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-  
-  // Handle export to Flutter
-  const handleExportToFlutter = async () => {
+
+  const downloadExport = async (exportType, fileName, apiCall) => {
+    setLoading({ ...loading, [exportType]: true });
+    
     try {
-      setLoading(true);
+      const response = await apiCall();
       
-      // Create a response for file download
-      const response = await exportApi.flutter();
-      
-      // Create a URL for the blob
+      // Create a download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'flutter_localizations.zip');
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
+      link.remove();
       
-      // Clean up and show success message
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
       setSnackbar({
         open: true,
-        message: 'Successfully exported to Flutter!',
+        message: `${exportType.charAt(0).toUpperCase() + exportType.slice(1)} export completed successfully!`,
         severity: 'success'
       });
     } catch (error) {
-      console.error('Error exporting to Flutter:', error);
+      console.error(`Error exporting to ${exportType}:`, error);
       setSnackbar({
         open: true,
-        message: 'Failed to export to Flutter. Please try again.',
+        message: `Failed to export to ${exportType}. Please try again.`,
         severity: 'error'
       });
     } finally {
-      setLoading(false);
+      setLoading({ ...loading, [exportType]: false });
     }
   };
-  
+
+  const handleExportToFlutter = () => {
+    downloadExport('flutter', 'flutter_localization.zip', exportApi.flutter);
+  };
+
+  const handleExportToJson = () => {
+    downloadExport('json', 'localization.json', exportApi.json);
+  };
+
+  const handleExportToCsv = () => {
+    downloadExport('csv', 'localization.csv', exportApi.csv);
+  };
+
   return (
-    <Box sx={{ mt: 3 }}>
-      <Typography variant="h5" gutterBottom>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
         Export Options
       </Typography>
-      
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Mobile App Exports
-          </Typography>
-          
-          <List>
-            <ListItem>
-              <ListItemIcon>
-                <MobileScreenShareIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Flutter/Dart" 
-                secondary="Export localization files ready to be used in a Flutter app" 
-              />
-              <Button 
-                variant="contained" 
-                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CloudDownloadIcon />}
+      <Typography variant="body1" paragraph>
+        Export your localization data in various formats to use in different platforms and systems.
+      </Typography>
+
+      <Grid container spacing={3}>
+        {/* Flutter Export Option */}
+        <Grid item xs={12} md={4}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Export to Flutter
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="body2" paragraph>
+              Export your localization data for Flutter applications.
+            </Typography>
+            <List dense>
+              <ListItem>
+                <ListItemIcon>
+                  <CodeIcon />
+                </ListItemIcon>
+                <ListItemText primary="Dart implementation" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <LanguageIcon />
+                </ListItemIcon>
+                <ListItemText primary="Language files" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <SettingsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Configuration file" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <DescriptionIcon />
+                </ListItemIcon>
+                <ListItemText primary="README file" />
+              </ListItem>
+            </List>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={loading.flutter ? <CircularProgress size={24} color="inherit" /> : <FileDownloadIcon />}
                 onClick={handleExportToFlutter}
-                disabled={loading}
+                disabled={loading.flutter}
               >
-                Export
+                {loading.flutter ? 'Exporting...' : 'Export'}
               </Button>
-            </ListItem>
-            <Divider />
-            <ListItem>
-              <ListItemIcon>
-                <InfoIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary="What's Included"
-                secondary={
-                  <React.Fragment>
-                    <Typography variant="body2" component="span">
-                      The export includes:
-                    </Typography>
-                    <List dense>
-                      <ListItem>
-                        <ListItemText primary="Full Dart implementation of the AppLocalizations class" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemText primary="Individual language files with all translations" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemText primary="l10n.yaml configuration file" />
-                      </ListItem>
-                      <ListItem>
-                        <ListItemText primary="README with installation and usage instructions" />
-                      </ListItem>
-                    </List>
-                  </React.Fragment>
-                }
-              />
-            </ListItem>
-          </List>
-        </CardContent>
-      </Card>
-      
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={6000} 
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* JSON Export Option */}
+        <Grid item xs={12} md={4}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Export to JSON
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="body2" paragraph>
+              Export your localization data as a JSON file.
+            </Typography>
+            <List dense>
+              <ListItem>
+                <ListItemIcon>
+                  <DataObjectIcon />
+                </ListItemIcon>
+                <ListItemText primary="Structured JSON format" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <LanguageIcon />
+                </ListItemIcon>
+                <ListItemText primary="All languages included" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <FormatListBulletedIcon />
+                </ListItemIcon>
+                <ListItemText primary="Key-value organization" />
+              </ListItem>
+            </List>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={loading.json ? <CircularProgress size={24} color="inherit" /> : <FileDownloadIcon />}
+                onClick={handleExportToJson}
+                disabled={loading.json}
+              >
+                {loading.json ? 'Exporting...' : 'Export'}
+              </Button>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* CSV Export Option */}
+        <Grid item xs={12} md={4}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Export to CSV
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="body2" paragraph>
+              Export your localization data as a CSV spreadsheet.
+            </Typography>
+            <List dense>
+              <ListItem>
+                <ListItemIcon>
+                  <TableChartIcon />
+                </ListItemIcon>
+                <ListItemText primary="Tabular format" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <LanguageIcon />
+                </ListItemIcon>
+                <ListItemText primary="All languages included" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <DescriptionIcon />
+                </ListItemIcon>
+                <ListItemText primary="Excel/Google Sheets compatible" />
+              </ListItem>
+            </List>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={loading.csv ? <CircularProgress size={24} color="inherit" /> : <FileDownloadIcon />}
+                onClick={handleExportToCsv}
+                disabled={loading.csv}
+              >
+                {loading.csv ? 'Exporting...' : 'Export'}
+              </Button>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
           {snackbar.message}
         </Alert>

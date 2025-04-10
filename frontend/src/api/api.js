@@ -31,4 +31,6 @@ export const keyApi = {
 // Export API services
 export const exportApi = {
   flutter: () => apiClient.get('/export/flutter', { responseType: 'blob' }),
+  json: () => apiClient.get('/export/json', { responseType: 'blob' }),
+  csv: () => apiClient.get('/export/csv', { responseType: 'blob' }),
 }; 
