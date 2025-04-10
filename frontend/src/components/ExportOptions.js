@@ -7,7 +7,7 @@ import {
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import MobileScreenShareIcon from '@mui/icons-material/MobileScreenShare';
 import InfoIcon from '@mui/icons-material/Info';
-import { apiClient } from '../api/api';
+import { exportApi } from '../api/api';
 
 const ExportOptions = () => {
   const [loading, setLoading] = useState(false);
@@ -28,9 +28,7 @@ const ExportOptions = () => {
       setLoading(true);
       
       // Create a response for file download
-      const response = await apiClient.get('/export/flutter', {
-        responseType: 'blob'
-      });
+      const response = await exportApi.flutter();
       
       // Create a URL for the blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
