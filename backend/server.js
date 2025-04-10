@@ -4,6 +4,7 @@ const cors = require('cors');
 const { sequelize } = require('./models');
 const languageRoutes = require('./routes/languageRoutes');
 const keyRoutes = require('./routes/keyRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/languages', languageRoutes);
 app.use('/api/keys', keyRoutes);
+app.use('/api/export', exportRoutes);
 
 // Root route
 app.get('/', (req, res) => {
