@@ -14,8 +14,14 @@ const ensureDirectoryExistence = (filePath) => {
   if (fs.existsSync(dirname)) {
     return true;
   }
+  
+  // Create parent directories recursively
   ensureDirectoryExistence(dirname);
-  fs.mkdirSync(dirname);
+  
+  // Create the directory
+  fs.mkdirSync(dirname, { recursive: true });
+  console.log(`Created directory: ${dirname}`);
+  return true;
 };
 
 /**
